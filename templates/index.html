@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Upload de Dados - Tijolu{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="upload-section">
+        <h1>Upload de Planilha</h1>
+        <form method="POST" enctype="multipart/form-data" class="upload-form">
+            <div class="file-input-container">
+                <input type="file" name="file" accept=".xlsx,.xls" required>
+            </div>
+            <button type="submit" class="upload-button">Enviar Arquivo</button>
+        </form>
+    </div>
+
+    {% if sheets %}
+    <div class="sheets-section">
+        <h2>Selecione as Abas para Importar</h2>
+        <form method="POST" class="sheets-form">
+            <div class="sheets-grid">
+                {% for sheet in sheets %}
+                <div class="sheet-item">
+                    <input type="checkbox" name="sheets" value="{{ sheet }}" id="sheet-{{ loop.index }}">
+                    <label for="sheet-{{ loop.index }}">{{ sheet }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="process-button">Processar Selecionados</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}

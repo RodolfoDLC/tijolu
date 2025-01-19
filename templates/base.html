@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tijolu - Sistema de Busca de Imóveis{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{{ url_for('home') }}" class="nav-brand">
+                <img src="{{ url_for('static', filename='images/logo_tijoloo.jpg') }}" alt="Tijolu Logo" class="nav-logo">
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('home') }}">Upload</a>
+                <a href="{{ url_for('search') }}">Buscar</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 Tijolu. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="property-container">
+    <div class="property-header">
+        <h1>Detalhes da Propriedade</h1>
+        <a href="{{ url_for('search') }}" class="back-button">Voltar para Busca</a>
+    </div>
+
+    <div class="property-card">
+        <div class="property-section">
+            <h2>Informações Básicas</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>SQL</label>
+                    <span>{{ property.sql }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Endereço</label>
+                    <span>{{ property.logradouro }}, {{ property.numero }}{% if property.complemento %}, {{ property.complemento }}{% endif %}</span>
+                </div>
+                <div class="info-item">
+                    <label>Bairro</label>
+                    <span>{{ property.bairro }}</span>
+                </div>
+                <div class="info-item">
+                    <label>CEP</label>
+                    <span>{{ property.cep }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="property-section">
+            <h2>Detalhes da Transação</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Valor da Transação</label>
+                    <span>{{ property.valor_transacao|currency if property.valor_transacao else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Data da Transação</label>
+                    <span>{{ property.data_transacao.strftime('%d/%m/%Y') if property.data_transacao else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Natureza da Transação</label>
+                    <span>{{ property.natureza_transacao or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Tipo de Financiamento</label>
+                    <span>{{ property.tipo_financiamento or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Valor Financiado</label>
+                    <span>{{ property.valor_financiado|currency if property.valor_financiado else 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="property-section">
+            <h2>Características do Imóvel</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Área do Terreno</label>
+                    <span>{{ property.area_terreno|metric if property.area_terreno else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Área Construída</label>
+                    <span>{{ property.area_construida|metric if property.area_construida else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Testada</label>
+                    <span>{{ property.testada|metric if property.testada else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Fração Ideal</label>
+                    <span>{{ property.fracao_ideal if property.fracao_ideal else 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="property-section">
+            <h2>Informações IPTU</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Uso</label>
+                    <span>{{ property.uso_iptu or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Descrição do Uso</label>
+                    <span>{{ property.descricao_uso_iptu or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Padrão</label>
+                    <span>{{ property.padrao_iptu or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Descrição do Padrão</label>
+                    <span>{{ property.descricao_padrao_iptu or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>ACC IPTU</label>
+                    <span>{{ property.acc_iptu|metric if property.acc_iptu else 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
