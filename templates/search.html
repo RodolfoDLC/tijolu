@@ -4,9 +4,10 @@
 
 {% block content %}
 <div class="container">
+    <!-- Search form -->
     <div class="search-container">
-        <form method="GET" action="{{ url_for('search') }}">
-            <input type="text" id="search-input" name="q" placeholder="Buscar por SQL..." value="{{ query if query else '' }}">
+        <form action="{{ url_for('search') }}" method="get" class="search-form">
+            <input type="text" name="q" placeholder="Buscar por SQL, Logradouro, CEP, Bairro ou Matrícula..." value="{{ query }}" required>
             <button type="submit">Buscar</button>
         </form>
     </div>
@@ -14,6 +15,8 @@
     {% if results %}
     <div class="results-container">
         <h2>Resultados para "{{ query }}":</h2>
+        
+        <!-- Results table -->
         <table class="results-table" id="resultsTable">
             <thead>
                 <tr>
@@ -26,22 +29,22 @@
                     <th class="sortable" data-sort="data_transacao">Data da Transação</th>
                     <th class="sortable" data-sort="area_terreno">Área do Terreno</th>
                     <th class="sortable" data-sort="area_construida">Área Construída</th>
+                    <th class="sortable" data-sort="preco_m2">Preço/m²</th>
                 </tr>
             </thead>
             <tbody>
                 {% for result in results %}
-                <tr>
-                    <td data-value="{{ result.sql }}"><a href="{{ url_for('property_detail', property_id=result.id) }}" target="_blank">{{ result.sql }}</a></td>
-                    <td data-value="{{ result.logradouro }}">{{ result.logradouro }}</td>
-                    <td data-value="{{ result.numero }}">{{ result.numero }}</td>
-                    <td data-value="{{ result.complemento }}">{{ result.complemento }}</td>
-                    <td data-value="{{ result.bairro }}">{{ result.bairro }}</td>
-                    <td data-value="{{ result.valor_transacao|default(0) }}">{{ result.valor_transacao|currency if result.valor_transacao else '' }}</td>
-                    <td data-value="{{ result.data_transacao.strftime('%Y%m%d') if result.data_transacao else '00000000' }}">
-                        {{ result.data_transacao.strftime('%d/%m/%Y') if result.data_transacao else '' }}
-                    </td>
-                    <td data-value="{{ result.area_terreno|default(0) }}">{{ result.area_terreno|metric if result.area_terreno else '' }}</td>
-                    <td data-value="{{ result.area_construida|default(0) }}">{{ result.area_construida|metric if result.area_construida else '' }}</td>
+                <tr onclick="window.location='{{ url_for('property_detail', property_id=result.id) }}'">
+                    <td>{{ result.sql }}</td>
+                    <td>{{ result.logradouro|capitalize_pt_br }}</td>
+                    <td>{{ result.numero }}</td>
+                    <td>{{ result.complemento|capitalize_pt_br }}</td>
+                    <td>{{ result.bairro|capitalize_pt_br }}</td>
+                    <td>{{ result.valor_transacao|currency }}</td>
+                    <td>{{ result.data_transacao.strftime('%d/%m/%Y') if result.data_transacao else '' }}</td>
+                    <td>{{ result.area_terreno|metric if result.area_terreno else '' }}</td>
+                    <td>{{ result.area_construida|metric if result.area_construida else '' }}</td>
+                    <td>{{ result.preco_m2|currency if result.preco_m2 else '' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -56,6 +59,7 @@
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script src="{{ url_for('static', filename='js/autocomplete.js') }}"></script>
 <script src="{{ url_for('static', filename='js/table-sort.js') }}"></script>
 {% endblock %}

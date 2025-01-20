@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, flash, json
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 from pandas import Timestamp
@@ -6,10 +6,13 @@ import os
 from datetime import datetime
 import locale
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from sqlalchemy import or_
+from sqlalchemy import or_, case, and_, func
+from sqlalchemy.ext.hybrid import hybrid_property
+from collections import defaultdict
 
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 # Set locale to Brazilian Portuguese
 locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
@@ -17,6 +20,7 @@ locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 # Configure the database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///properties.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'uploads'
 db = SQLAlchemy(app)
 
 # Utility function for processing row values
@@ -82,16 +86,49 @@ class Property(db.Model):
     descricao_padrao_iptu = db.Column(db.String(200))  # Descrição do padrão (IPTU)
     acc_iptu = db.Column(db.Float)  # ACC (IPTU)
 
-# Reset the database (drops and recreates tables)
+    @hybrid_property
+    def preco_m2(self):
+        """Calculate price per square meter based on property type and conditions"""
+        if (self.proporcao_transmitida == 100 and 
+            self.natureza_transacao and 
+            'compra e venda' in self.natureza_transacao.lower() and 
+            self.valor_transacao):
+            
+            if self.uso_iptu == '000' and self.area_terreno:  # For land
+                return round(self.valor_transacao / self.area_terreno, 2)
+            elif self.area_construida and self.area_construida > 0:  # For buildings
+                return round(self.valor_transacao / self.area_construida, 2)
+        
+        return None
+
+    @preco_m2.expression
+    def preco_m2(cls):
+        """SQL expression for price per square meter calculation"""
+        return case(
+            (and_(
+                cls.proporcao_transmitida == 100,
+                cls.natureza_transacao.ilike('%compra e venda%'),
+                cls.valor_transacao.isnot(None),
+                cls.uso_iptu == '000',
+                cls.area_terreno.isnot(None),
+                cls.area_terreno > 0
+            ), cls.valor_transacao / cls.area_terreno),
+            (and_(
+                cls.proporcao_transmitida == 100,
+                cls.natureza_transacao.ilike('%compra e venda%'),
+                cls.valor_transacao.isnot(None),
+                cls.area_construida.isnot(None),
+                cls.area_construida > 0
+            ), cls.valor_transacao / cls.area_construida),
+            else_=None
+        )
+
+# Only create tables if they don't exist
 with app.app_context():
-    db.drop_all()
     db.create_all()
 
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
@@ -100,9 +137,15 @@ def home():
         if 'file' in request.files:
             file = request.files['file']
             if file.filename == '':
-                return "No file selected"
+                flash("Nenhum arquivo selecionado", "error")
+                return redirect(url_for('home'))
             if not file.filename.endswith('.xlsx'):
-                return "Invalid file type. Please upload an Excel (.xlsx) file."
+                flash("Tipo de arquivo inválido. Por favor, envie um arquivo Excel (.xlsx)", "error")
+                return redirect(url_for('home'))
+
+            # Create upload folder if it doesn't exist
+            if not os.path.exists(app.config['UPLOAD_FOLDER']):
+                os.makedirs(app.config['UPLOAD_FOLDER'])
 
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
             file.save(filepath)
@@ -111,22 +154,26 @@ def home():
                 # Read Excel file and fetch sheet names
                 excel_data = pd.ExcelFile(filepath, engine='openpyxl')
                 sheet_names = excel_data.sheet_names
-
-                # Render dropdown to select sheets
-                return render_template('index.html', sheet_names=sheet_names, file_uploaded=True)
+                return render_template('index.html', sheet_names=sheet_names)
             except Exception as e:
-                return f"<h2>Error processing file:</h2> {e}"
+                flash(f"Erro ao processar arquivo: {str(e)}", "error")
+                return redirect(url_for('home'))
 
         # Process selected sheets
         if 'sheets' in request.form:
             selected_sheets = request.form.getlist('sheets')
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], os.listdir(app.config['UPLOAD_FOLDER'])[0])
+            if not selected_sheets:
+                flash("Por favor, selecione pelo menos uma aba", "error")
+                return redirect(url_for('home'))
 
             try:
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], os.listdir(app.config['UPLOAD_FOLDER'])[0])
                 all_data = []
+                
                 for sheet in selected_sheets:
                     data = pd.read_excel(filepath, sheet_name=sheet, engine='openpyxl')
                     all_data.append(data)
+                
                 processed_data = pd.concat(all_data)
 
                 # Process each row and add to database
@@ -139,7 +186,7 @@ def home():
                         bairro=clean_string(row.get('Bairro', '')),
                         matricula_imovel=clean_string(row.get('Matrícula do Imóvel', '')),
                         referencia=clean_string(row.get('Referência', '')),
-                        cep=clean_string(row.get('CEP', '')),
+                        cep=format_cep(row.get('CEP', '')),
                         natureza_transacao=clean_string(row.get('Natureza de Transação', '')),
                         valor_transacao=convert_to_float(row.get('Valor de Transação (declarado pelo contribuinte)', 0)),
                         data_transacao=parse_date(row.get('Data de Transação', '')),
@@ -164,10 +211,12 @@ def home():
                     db.session.add(property_entry)
 
                 db.session.commit()
-                return redirect(url_for('search'))  # Redirect to the search page
+                flash("Dados importados com sucesso!", "success")
+                return redirect(url_for('search'))
 
             except Exception as e:
-                return f"<h2>Error processing sheets:</h2> {e}"
+                flash(f"Erro ao processar planilhas: {str(e)}", "error")
+                return redirect(url_for('home'))
 
     return render_template('index.html')
 
@@ -182,6 +231,19 @@ def convert_to_float(value):
 def clean_string(value):
     """Convert non-numeric values to lowercase and strip spaces."""
     return str(value).strip().lower() if pd.notna(value) else ''
+
+def format_cep(value):
+    """Format CEP to ensure 8 digits with leading zeros."""
+    if pd.isna(value):
+        return ''
+    
+    # Remove any non-numeric characters
+    cep = ''.join(filter(str.isdigit, str(value)))
+    
+    # Pad with leading zeros if necessary
+    cep = cep.zfill(8)
+    
+    return cep
 
 def parse_date(value):
     """Try parsing different date formats and return a date object."""
@@ -204,17 +266,20 @@ def parse_date(value):
 @app.route('/search')
 def search():
     query = request.args.get('q', '').strip().lower()
+    results = []
+    
     if query:
-        results = Property.query.filter(
-            (Property.sql.ilike(f"%{query}%")) |
-            (Property.logradouro.ilike(f"%{query}%")) |
-            (Property.numero.ilike(f"%{query}%")) |
-            (Property.complemento.ilike(f"%{query}%")) |
-            (Property.bairro.ilike(f"%{query}%")) |
-            (Property.matricula_imovel.ilike(f"%{query}%"))
-        ).all()
-    else:
-        results = []
+        try:
+            results = Property.query.filter(
+                (Property.sql.ilike(f"%{query}%")) |
+                (Property.logradouro.ilike(f"%{query}%")) |
+                (Property.cep.ilike(f"%{query}%")) |
+               (Property.bairro.ilike(f"%{query}%")) |
+                (Property.matricula_imovel.ilike(f"%{query}%"))
+            ).all()
+        except Exception as e:
+            print(f"Error in search: {e}")
+            results = []
     
     return render_template('search.html', results=results, query=query)
 
@@ -245,6 +310,84 @@ def autocomplete():
         suggestions = [prop.logradouro for prop in results]
         return jsonify(suggestions)
     return jsonify([])
+
+def capitalize_pt_br(text):
+    """
+    Capitalize text following Brazilian Portuguese rules.
+    Handles numbers and dots in the text.
+    """
+    if not text:
+        return ''
+    
+    # List of words that should remain lowercase
+    lowercase_words = {'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'para', 'por', 'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas', 'no', 'na', 'nos', 'nas'}
+    
+    # List of known abbreviations that should remain uppercase
+    abbreviations = {'sql', 'cep', 'acc', 'iptu'}
+    
+    # Special case mappings for specific terms
+    special_cases = {
+        'compra e venda': 'Compra e Venda',
+        'permuta': 'Permuta',
+        'doacao': 'Doação',
+        'dacao em pagamento': 'Dação em Pagamento',
+        'arrematacao': 'Arrematação',
+        'adjudicacao': 'Adjudicação',
+        'sem financiamento': 'Sem Financiamento',
+        'financiamento bancario': 'Financiamento Bancário',
+        'financiamento imobiliario': 'Financiamento Imobiliário',
+        'carta de credito': 'Carta de Crédito',
+        'consorcio': 'Consórcio',
+        'financiamento proprio': 'Financiamento Próprio'
+    }
+    
+    # Remove leading/trailing whitespace
+    text = text.strip()
+    
+    # Extract any leading numbers and dots
+    import re
+    prefix_match = re.match(r'^(\d+\.\s*)?(.+)$', text)
+    if prefix_match:
+        prefix = prefix_match.group(1) or ''
+        main_text = prefix_match.group(2)
+    else:
+        prefix = ''
+        main_text = text
+    
+    # Check for special cases first
+    main_text_lower = main_text.lower()
+    if main_text_lower in special_cases:
+        return prefix + special_cases[main_text_lower]
+    
+    words = main_text.split()
+    capitalized_words = []
+    
+    for i, word in enumerate(words):
+        word_lower = word.lower()
+        
+        # Keep abbreviations in uppercase
+        if word_lower in abbreviations:
+            capitalized_words.append(word_lower.upper())
+            continue
+            
+        # Always capitalize first word
+        if i == 0:
+            capitalized_words.append(word.capitalize())
+            continue
+            
+        # Keep lowercase words if they're not at the start
+        if word_lower in lowercase_words:
+            capitalized_words.append(word_lower)
+            continue
+            
+        # Capitalize other words
+        capitalized_words.append(word.capitalize())
+    
+    # Combine prefix with capitalized text
+    return prefix + ' '.join(capitalized_words)
+
+# Register the filter with Jinja2
+app.jinja_env.filters['capitalize_pt_br'] = capitalize_pt_br
 
 if __name__ == '__main__':
     app.run(debug=True)

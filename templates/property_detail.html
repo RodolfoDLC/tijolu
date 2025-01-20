@@ -9,19 +9,45 @@
 
     <div class="property-card">
         <div class="property-section">
-            <h2>Informações Básicas</h2>
+            <h2>Identificação do Imóvel</h2>
             <div class="info-grid">
                 <div class="info-item">
                     <label>SQL</label>
                     <span>{{ property.sql }}</span>
                 </div>
                 <div class="info-item">
-                    <label>Endereço</label>
-                    <span>{{ property.logradouro }}, {{ property.numero }}{% if property.complemento %}, {{ property.complemento }}{% endif %}</span>
+                    <label>Matrícula do Imóvel</label>
+                    <span>{{ property.matricula_imovel }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Referência</label>
+                    <span>{{ property.referencia }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Situação do SQL</label>
+                    <span>{{ property.situacao_sql|capitalize_pt_br }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="property-section">
+            <h2>Localização</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Logradouro</label>
+                    <span>{{ property.logradouro|capitalize_pt_br }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Número</label>
+                    <span>{{ property.numero }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Complemento</label>
+                    <span>{{ property.complemento|capitalize_pt_br }}</span>
                 </div>
                 <div class="info-item">
                     <label>Bairro</label>
-                    <span>{{ property.bairro }}</span>
+                    <span>{{ property.bairro|capitalize_pt_br }}</span>
                 </div>
                 <div class="info-item">
                     <label>CEP</label>
@@ -34,6 +60,10 @@
             <h2>Detalhes da Transação</h2>
             <div class="info-grid">
                 <div class="info-item">
+                    <label>Natureza da Transação</label>
+                    <span>{{ property.natureza_transacao|capitalize_pt_br }}</span>
+                </div>
+                <div class="info-item">
                     <label>Valor da Transação</label>
                     <span>{{ property.valor_transacao|currency if property.valor_transacao else 'N/A' }}</span>
                 </div>
@@ -42,22 +72,54 @@
                     <span>{{ property.data_transacao.strftime('%d/%m/%Y') if property.data_transacao else 'N/A' }}</span>
                 </div>
                 <div class="info-item">
-                    <label>Natureza da Transação</label>
-                    <span>{{ property.natureza_transacao or 'N/A' }}</span>
-                </div>
-                <div class="info-item">
                     <label>Tipo de Financiamento</label>
-                    <span>{{ property.tipo_financiamento or 'N/A' }}</span>
+                    <span>{{ property.tipo_financiamento|capitalize_pt_br }}</span>
                 </div>
                 <div class="info-item">
                     <label>Valor Financiado</label>
                     <span>{{ property.valor_financiado|currency if property.valor_financiado else 'N/A' }}</span>
                 </div>
+                <div class="info-item">
+                    <label>Cartório de Registro</label>
+                    <span>{{ property.cartorio_registro|capitalize_pt_br }}</span>
+                </div>
             </div>
         </div>
 
         <div class="property-section">
-            <h2>Características do Imóvel</h2>
+            <h2>Valores de Referência</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Valor Venal de Referência</label>
+                    <span>{{ property.valor_venal_referencia|currency if property.valor_venal_referencia else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Proporção Transmitida</label>
+                    <span>{{ property.proporcao_transmitida }}%</span>
+                </div>
+                <div class="info-item">
+                    <label>Valor Venal Proporcional</label>
+                    <span>{{ property.valor_venal_proporcional|currency if property.valor_venal_proporcional else 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Base de Cálculo</label>
+                    <span>{{ property.base_calculo|currency if property.base_calculo else 'N/A' }}</span>
+                </div>
+                {% if property.preco_m2 %}
+                <div class="info-item">
+                    <label>Preço por m²</label>
+                    <span>{{ property.preco_m2|currency }} /m²</span>
+                </div>
+                <div class="info-item">
+                    <label>Área Utilizada no Cálculo</label>
+                    <span>{{ 'Área do Terreno' if property.uso_iptu == '000' else 'Área Construída' }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="property-section">
+            <h2>Características Físicas</h2>
             <div class="info-grid">
                 <div class="info-item">
                     <label>Área do Terreno</label>
@@ -83,23 +145,23 @@
             <div class="info-grid">
                 <div class="info-item">
                     <label>Uso</label>
-                    <span>{{ property.uso_iptu or 'N/A' }}</span>
+                    <span>{{ property.uso_iptu }}</span>
                 </div>
                 <div class="info-item">
                     <label>Descrição do Uso</label>
-                    <span>{{ property.descricao_uso_iptu or 'N/A' }}</span>
+                    <span>{{ property.descricao_uso_iptu|capitalize_pt_br }}</span>
                 </div>
                 <div class="info-item">
                     <label>Padrão</label>
-                    <span>{{ property.padrao_iptu or 'N/A' }}</span>
+                    <span>{{ property.padrao_iptu }}</span>
                 </div>
                 <div class="info-item">
                     <label>Descrição do Padrão</label>
-                    <span>{{ property.descricao_padrao_iptu or 'N/A' }}</span>
+                    <span>{{ property.descricao_padrao_iptu|capitalize_pt_br }}</span>
                 </div>
                 <div class="info-item">
-                    <label>ACC IPTU</label>
-                    <span>{{ property.acc_iptu|metric if property.acc_iptu else 'N/A' }}</span>
+                    <label>Ano de Construção (ACC)</label>
+                    <span>{{ property.acc_iptu|int if property.acc_iptu else 'N/A' }}</span>
                 </div>
             </div>
         </div>

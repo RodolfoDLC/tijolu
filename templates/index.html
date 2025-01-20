@@ -6,30 +6,35 @@
 <div class="container">
     <div class="upload-section">
         <h1>Upload de Planilha</h1>
+        
+        <!-- First form for file upload -->
+        {% if not sheet_names %}
         <form method="POST" enctype="multipart/form-data" class="upload-form">
             <div class="file-input-container">
-                <input type="file" name="file" accept=".xlsx,.xls" required>
+                <input type="file" name="file" accept=".xlsx" required>
             </div>
             <button type="submit" class="upload-button">Enviar Arquivo</button>
         </form>
-    </div>
+        {% endif %}
 
-    {% if sheets %}
-    <div class="sheets-section">
-        <h2>Selecione as Abas para Importar</h2>
-        <form method="POST" class="sheets-form">
-            <div class="sheets-grid">
-                {% for sheet in sheets %}
-                <div class="sheet-item">
-                    <input type="checkbox" name="sheets" value="{{ sheet }}" id="sheet-{{ loop.index }}">
-                    <label for="sheet-{{ loop.index }}">{{ sheet }}</label>
+        <!-- Second form for sheet selection -->
+        {% if sheet_names %}
+        <div class="sheets-section">
+            <h2>Selecione as Abas para Importar</h2>
+            <form method="POST" class="sheets-form">
+                <div class="sheets-grid">
+                    {% for sheet in sheet_names %}
+                    <div class="sheet-item">
+                        <input type="checkbox" name="sheets" value="{{ sheet }}" id="sheet-{{ loop.index }}">
+                        <label for="sheet-{{ loop.index }}">{{ sheet }}</label>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
-            <button type="submit" class="process-button">Processar Selecionados</button>
-        </form>
+                <button type="submit" class="process-button">Processar Selecionados</button>
+            </form>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 
     {% with messages = get_flashed_messages() %}
         {% if messages %}
