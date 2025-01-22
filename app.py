@@ -54,6 +54,192 @@ def format_metric(value):
     except (TypeError, ValueError):
         return "0,00 m²"
 
+def format_logradouro(text):
+    if not text:
+        return ''
+    
+    # Dictionary of abbreviations with proper punctuation
+    abbrev = {
+        'R ': 'R. ',
+        'AV ': 'Av. ',
+        'AL ': 'Al. ',
+        'ESTR ': 'Estr. ',
+        'PCA ': 'Pça. ',
+        'PRACA ': 'Pça. ',
+        'PRAÇA ': 'Pça. ',
+        'TV ': 'Tv. ',
+        'VD ': 'Vd. ',
+        'LG ': 'Lg. ',
+        'PC ': 'Pc. ',
+        'ROD ': 'Rod. ',
+        'PQ ': 'Pq. ',
+        'JD ': 'Jd. ',
+        'VL ': 'Vl. '
+    }
+    
+    # Apply abbreviations
+    text = text.upper()
+    for old, new in abbrev.items():
+        if text.startswith(old):
+            text = new + text[len(old):]
+            break
+    
+    return text.title()
+
+def format_complemento(text):
+    if not text:
+        return ''
+    
+    # Dictionary of abbreviations with proper punctuation
+    abbrev = {
+        'AP ': 'Ap. ',
+        'APTO ': 'Ap. ',
+        'APT ': 'Ap. ',
+        'APARTAMENTO ': 'Ap. ',
+        'AND ': 'And. ',
+        'ANDAR ': 'And. ',
+        'BL ': 'Bl. ',
+        'BLOCO ': 'Bl. ',
+        'CJ ': 'Cj. ',
+        'CONJ ': 'Cj. ',
+        'CONJUNTO ': 'Cj. ',
+        'SL ': 'Sl. ',
+        'SALA ': 'Sl. ',
+        'SS ': 'SS. ',
+        'SUBSOLO ': 'SS. ',
+        'TERREO ': 'Tér. ',
+        'TÉRREO ': 'Tér. ',
+        'UN ': 'Un. ',
+        'UNID ': 'Un. ',
+        'UNIDADE ': 'Un. ',
+        'GAL ': 'Gal. ',
+        'GALERIA ': 'Gal. ',
+        'GAR ': 'Gar. ',
+        'GARAGEM ': 'Gar. ',
+        'PAV ': 'Pav. ',
+        'PAVIMENTO ': 'Pav. ',
+        'COB ': 'Cob. ',
+        'COBERTURA ': 'Cob. ',
+        'FDS ': 'Fds. ',
+        'FUNDOS ': 'Fds. ',
+        'LJ ': 'Lj. ',
+        'LOJA ': 'Lj. ',
+        'SBL ': 'Sbl. ',
+        'SOBRELOJA ': 'Sbl. '
+    }
+    
+    # Apply abbreviations
+    text = text.upper()
+    for old, new in abbrev.items():
+        if text.startswith(old):
+            text = new + text[len(old):]
+            break
+    
+    return text.title()
+
+def format_bairro(text):
+    if not text:
+        return ''
+    
+    # Articles and prepositions that should remain lowercase
+    lowercase_words = {'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'por', 'para'}
+    
+    # Dictionary of abbreviations with proper punctuation
+    abbrev = {
+        'JD ': 'Jd. ',
+        'JARDIM ': 'Jd. ',
+        'VL ': 'Vl. ',
+        'VILA ': 'Vl. ',
+        'PQ ': 'Pq. ',
+        'PARQUE ': 'Pq. ',
+        'JDS ': 'Jds. ',
+        'JARDINS ': 'Jds. ',
+        'VLS ': 'Vls. ',
+        'VILAS ': 'Vls. ',
+        'PQS ': 'Pqs. ',
+        'PARQUES ': 'Pqs. ',
+        'ED ': 'Ed. ',
+        'EDIFICIO ': 'Ed. ',
+        'EDIFÍCIO ': 'Ed. ',
+        'CD ': 'Cond. ',
+        'COND ': 'Cond. ',
+        'CONDOMINIO ': 'Cond. ',
+        'CONDOMÍNIO ': 'Cond. '
+    }
+    
+    # Dictionary for specific neighborhood names
+    special_names = {
+        'C CESAR': 'Cerqueira Cesar',
+        'C. CESAR': 'Cerqueira Cesar',
+        'CERQ CESAR': 'Cerqueira Cesar',
+        'C.CESAR': 'Cerqueira Cesar'
+    }
+    
+    # Check for special neighborhood names first
+    text = text.upper()
+    for old, new in special_names.items():
+        if text == old:
+            return new
+    
+    # Apply regular abbreviations
+    for old, new in abbrev.items():
+        if text.startswith(old):
+            text = new + text[len(old):]
+            break
+    
+    # Split into words and apply capitalization rules
+    words = text.lower().split()
+    if not words:
+        return ''
+    
+    # First word is always capitalized
+    result = [words[0].capitalize()]
+    
+    # Apply rules for remaining words
+    result.extend(word if word in lowercase_words else word.capitalize() 
+                 for word in words[1:])
+    
+    return ' '.join(result)
+
+def format_referencia(text):
+    if not text:
+        return ''
+    
+    # Articles and prepositions that should remain lowercase
+    lowercase_words = {'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'por', 'para'}
+    
+    # Dictionary of abbreviations with proper punctuation
+    abbrev = {
+        'ED ': 'Ed. ',
+        'EDIFICIO ': 'Ed. ',
+        'EDIFÍCIO ': 'Ed. ',
+        'CD ': 'Cond. ',
+        'COND ': 'Cond. ',
+        'CONDOMINIO ': 'Cond. ',
+        'CONDOMÍNIO ': 'Cond. '
+    }
+    
+    # Apply abbreviations
+    text = text.upper()
+    for old, new in abbrev.items():
+        if text.startswith(old):
+            text = new + text[len(old):]
+            break
+    
+    # Split into words and apply capitalization rules
+    words = text.lower().split()
+    if not words:
+        return ''
+    
+    # First word is always capitalized
+    result = [words[0].capitalize()]
+    
+    # Apply rules for remaining words
+    result.extend(word if word in lowercase_words else word.capitalize() 
+                 for word in words[1:])
+    
+    return ' '.join(result)
+
 # Define the Property model with all columns
 class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -388,6 +574,41 @@ def capitalize_pt_br(text):
 
 # Register the filter with Jinja2
 app.jinja_env.filters['capitalize_pt_br'] = capitalize_pt_br
+
+# Register the filters
+app.jinja_env.filters['format_logradouro'] = format_logradouro
+app.jinja_env.filters['format_complemento'] = format_complemento
+app.jinja_env.filters['format_bairro'] = format_bairro
+app.jinja_env.filters['format_referencia'] = format_referencia
+
+def clean_transaction_type(text):
+    if not text:
+        return ''
+    
+    # Articles and prepositions that should remain lowercase
+    lowercase_words = {'de', 'da', 'do', 'das', 'dos', 'e', 'em', 'com', 'por', 'para'}
+    
+    # Remove numbers and dots from the beginning of the text
+    cleaned = text.strip().lower()
+    while cleaned and (cleaned[0].isdigit() or cleaned[0] == '.'):
+        cleaned = cleaned[1:].strip()
+    
+    # Split into words and apply capitalization rules
+    words = cleaned.split()
+    if not words:
+        return ''
+    
+    # First word is always capitalized
+    result = [words[0].capitalize()]
+    
+    # Apply rules for remaining words
+    result.extend(word if word in lowercase_words else word.capitalize() 
+                 for word in words[1:])
+    
+    return ' '.join(result)
+
+# Register the new filter
+app.jinja_env.filters['clean_transaction_type'] = clean_transaction_type
 
 if __name__ == '__main__':
     app.run(debug=True)

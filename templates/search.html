@@ -36,10 +36,10 @@
                 {% for result in results %}
                 <tr onclick="window.location='{{ url_for('property_detail', property_id=result.id) }}'">
                     <td>{{ result.sql }}</td>
-                    <td>{{ result.logradouro|capitalize_pt_br }}</td>
+                    <td>{{ result.logradouro|format_logradouro }}</td>
                     <td>{{ result.numero }}</td>
-                    <td>{{ result.complemento|capitalize_pt_br }}</td>
-                    <td>{{ result.bairro|capitalize_pt_br }}</td>
+                    <td>{{ result.complemento|format_complemento }}</td>
+                    <td>{{ result.bairro|format_bairro }}</td>
                     <td>{{ result.valor_transacao|currency }}</td>
                     <td>{{ result.data_transacao.strftime('%d/%m/%Y') if result.data_transacao else '' }}</td>
                     <td>{{ result.area_terreno|metric if result.area_terreno else '' }}</td>

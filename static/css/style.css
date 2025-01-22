@@ -669,4 +669,42 @@ form button:hover {
 canvas#priceChart {
     width: 100% !important;
     height: 400px !important;
+}
+
+/* Results table column widths */
+.results-table th[data-sort="complemento"] {
+    width: 110px !important;
+    min-width: 110px !important;
+}
+
+.results-table td:nth-child(4) {  /* Complemento column */
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+    white-space: normal;  /* Allow text wrapping */
+    word-wrap: break-word;
+}
+
+.results-table th[data-sort="area_construida"],
+.results-table td:nth-child(9) {  /* Area Construida column */
+    min-width: 130px;
+}
+
+.results-table th[data-sort="preco_m2"],
+.results-table td:nth-child(10) {  /* Preço/m² column */
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 100px !important;
+}
+
+/* Ensure table remains responsive */
+.results-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Force table layout */
+.results-table {
+    table-layout: fixed;
+    width: 100%;
 } 

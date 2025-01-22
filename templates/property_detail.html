@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
+{% block title %}Detalhes da Propriedade{% endblock %}
+
 {% block content %}
 <div class="property-container">
     <div class="property-header">
         <h1>Detalhes da Propriedade</h1>
-        <a href="{{ url_for('search') }}" class="back-button">Voltar para Busca</a>
+        <a href="{{ url_for('search') }}" class="back-button" onclick="return goBackToSearch()">Voltar à pesquisa</a>
     </div>
 
     <div class="property-card">
@@ -21,7 +23,7 @@
                 </div>
                 <div class="info-item">
                     <label>Referência</label>
-                    <span>{{ property.referencia }}</span>
+                    <span>{{ property.referencia|format_referencia }}</span>
                 </div>
                 <div class="info-item">
                     <label>Situação do SQL</label>
@@ -35,7 +37,7 @@
             <div class="info-grid">
                 <div class="info-item">
                     <label>Logradouro</label>
-                    <span>{{ property.logradouro|capitalize_pt_br }}</span>
+                    <span>{{ property.logradouro|format_logradouro }}</span>
                 </div>
                 <div class="info-item">
                     <label>Número</label>
@@ -43,7 +45,7 @@
                 </div>
                 <div class="info-item">
                     <label>Complemento</label>
-                    <span>{{ property.complemento|capitalize_pt_br }}</span>
+                    <span>{{ property.complemento|format_complemento }}</span>
                 </div>
                 <div class="info-item">
                     <label>Bairro</label>
@@ -61,7 +63,7 @@
             <div class="info-grid">
                 <div class="info-item">
                     <label>Natureza da Transação</label>
-                    <span>{{ property.natureza_transacao|capitalize_pt_br }}</span>
+                    <span>{{ property.natureza_transacao|clean_transaction_type }}</span>
                 </div>
                 <div class="info-item">
                     <label>Valor da Transação</label>
@@ -73,7 +75,7 @@
                 </div>
                 <div class="info-item">
                     <label>Tipo de Financiamento</label>
-                    <span>{{ property.tipo_financiamento|capitalize_pt_br }}</span>
+                    <span>{{ property.tipo_financiamento|clean_transaction_type }}</span>
                 </div>
                 <div class="info-item">
                     <label>Valor Financiado</label>
@@ -167,5 +169,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='js/search-state.js') }}"></script>
 {% endblock %}
 
